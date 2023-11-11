@@ -280,6 +280,14 @@ let targets: [CustomTarget] = [
 
   .target(
     kind: .exported,
+    name: "ExperimentalBufferView"),
+  .target(
+    kind: .test,
+    name: "ExperimentalBufferViewTests",
+    dependencies: ["ExperimentalBufferView"]),
+
+  .target(
+    kind: .exported,
     name: "Collections",
     dependencies: [
       "BitCollections",
