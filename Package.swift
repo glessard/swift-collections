@@ -55,18 +55,20 @@ var defines: [String] = [
 let _sharedSettings: [SwiftSetting] = defines.map { .define($0) } + [
   .enableExperimentalFeature("BuiltinModule"),
   .enableExperimentalFeature("NonescapableTypes"),
-  .enableExperimentalFeature("BitwiseCopyable"),
   .enableExperimentalFeature("RawLayout"),
   .enableExperimentalFeature("SuppressedAssociatedTypes"),
 ]
 
-let _settings: [SwiftSetting] = _sharedSettings + [
-  .swiftLanguageMode(.v6),
-]
+#if swift(>=6)
+let languageMode6: [SwiftSetting] = [.swiftLanguageMode(.v6)]
+let languageMode5: [SwiftSetting] = [.swiftLanguageMode(.v5)]
+#else
+let languageMode6: [SwiftSetting] = []
+let languageMode5: [SwiftSetting] = []
+#endif
 
-let _testSettings: [SwiftSetting] = _sharedSettings + [
-  .swiftLanguageMode(.v5),
-]
+let _settings =     _sharedSettings + languageMode6
+let _testSettings = _sharedSettings + languageMode5
 
 struct CustomTarget {
   enum Kind {
@@ -288,7 +290,7 @@ let targets: [CustomTarget] = [
     directory: "RopeModule",
     exclude: ["CMakeLists.txt"],
     // FIXME: _modify accessors in RopeModule seem to be broken in Swift 6 mode
-    settings: _sharedSettings + [.swiftLanguageVersion(.v5)]),
+    settings: _sharedSettings + languageMode5),
   .target(
     kind: .test,
     name: "RopeModuleTests",
