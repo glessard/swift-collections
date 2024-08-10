@@ -342,7 +342,7 @@ extension RawSpan {
   public func unsafeView<T: BitwiseCopyable>(
     as type: T.Type
   ) -> Span<T> {
-    Span(_unsafeStart: _start, byteCount: byteCount, owner: self)
+    Span(_unsafeStart: _start, byteCount: byteCount)
   }
 }
 
