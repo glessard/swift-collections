@@ -10,8 +10,6 @@
 //
 //===----------------------------------------------------------------------===//
 
-import Builtin
-
 // A RawSpan represents a span of initialized memory
 // of unspecified type.
 @frozen
@@ -23,7 +21,7 @@ public struct RawSpan: Copyable, ~Escapable {
 
   @usableFromInline let _count: Int
 
-  @inlinable @inline(__always)
+  @_alwaysEmitIntoClient
   internal init<Owner: ~Copyable & ~Escapable>(
     _unchecked start: UnsafeRawPointer?,
     byteCount: Int,
@@ -48,9 +46,9 @@ extension RawSpan {
   ///   - buffer: an `UnsafeRawBufferPointer` to initialized memory.
   ///   - owner: a binding whose lifetime must exceed that of
   ///            the newly created `RawSpan`.
-  @inlinable @inline(__always)
+  @_alwaysEmitIntoClient
   public init<Owner: ~Copyable & ~Escapable>(
-    unsafeBytes buffer: UnsafeRawBufferPointer,
+    _unsafeBytes buffer: UnsafeRawBufferPointer,
     owner: borrowing Owner
   ) {
     self.init(
@@ -69,10 +67,10 @@ extension RawSpan {
   ///            the newly created `RawSpan`.
   @_alwaysEmitIntoClient
   public init<Owner: ~Copyable & ~Escapable>(
-    unsafeBytes buffer: UnsafeMutableRawBufferPointer,
+    _unsafeBytes buffer: UnsafeMutableRawBufferPointer,
     owner: borrowing Owner
   ) {
-    self.init(unsafeBytes: UnsafeRawBufferPointer(buffer), owner: owner)
+    self.init(_unsafeBytes: UnsafeRawBufferPointer(buffer), owner: owner)
   }
 
   /// Unsafely create a `RawSpan` over initialized memory.
@@ -86,9 +84,9 @@ extension RawSpan {
   ///   - byteCount: the number of initialized bytes in the span.
   ///   - owner: a binding whose lifetime must exceed that of
   ///            the newly created `RawSpan`.
-  @inlinable @inline(__always)
+  @_alwaysEmitIntoClient
   public init<Owner: ~Copyable & ~Escapable>(
-    unsafeStart pointer: UnsafeRawPointer,
+    _unsafeStart pointer: UnsafeRawPointer,
     byteCount: Int,
     owner: borrowing Owner
   ) {
