@@ -22,11 +22,10 @@ public struct RawSpan: Copyable, ~Escapable {
   @usableFromInline let _count: Int
 
   @_alwaysEmitIntoClient
-  internal init<Owner: ~Copyable & ~Escapable>(
+  internal init(
     _unchecked start: UnsafeRawPointer?,
-    byteCount: Int,
-    owner: borrowing Owner
-  ) {
+    byteCount: Int
+  ) -> dependsOn(immortal) Self {
     _pointer = start
     _count = byteCount
   }
@@ -47,12 +46,11 @@ extension RawSpan {
   ///   - owner: a binding whose lifetime must exceed that of
   ///            the newly created `RawSpan`.
   @_alwaysEmitIntoClient
-  public init<Owner: ~Copyable & ~Escapable>(
-    _unsafeBytes buffer: UnsafeRawBufferPointer,
-    owner: borrowing Owner
-  ) {
+  public init(
+    _unsafeBytes buffer: UnsafeRawBufferPointer
+  ) -> dependsOn(immortal) Self {
     self.init(
-      _unchecked: buffer.baseAddress, byteCount: buffer.count, owner: owner
+      _unchecked: buffer.baseAddress, byteCount: buffer.count
     )
   }
 
@@ -66,11 +64,10 @@ extension RawSpan {
   ///   - owner: a binding whose lifetime must exceed that of
   ///            the newly created `RawSpan`.
   @_alwaysEmitIntoClient
-  public init<Owner: ~Copyable & ~Escapable>(
-    _unsafeBytes buffer: UnsafeMutableRawBufferPointer,
-    owner: borrowing Owner
-  ) {
-    self.init(_unsafeBytes: UnsafeRawBufferPointer(buffer), owner: owner)
+  public init(
+    _unsafeBytes buffer: UnsafeMutableRawBufferPointer
+  ) -> dependsOn(immortal) Self {
+    self.init(_unsafeBytes: UnsafeRawBufferPointer(buffer))
   }
 
   /// Unsafely create a `RawSpan` over initialized memory.
@@ -85,13 +82,12 @@ extension RawSpan {
   ///   - owner: a binding whose lifetime must exceed that of
   ///            the newly created `RawSpan`.
   @_alwaysEmitIntoClient
-  public init<Owner: ~Copyable & ~Escapable>(
+  public init(
     _unsafeStart pointer: UnsafeRawPointer,
-    byteCount: Int,
-    owner: borrowing Owner
-  ) {
+    byteCount: Int
+  ) -> dependsOn(immortal) Self {
     precondition(byteCount >= 0, "Count must not be negative")
-    self.init(_unchecked: pointer, byteCount: byteCount, owner: owner)
+    self.init(_unchecked: pointer, byteCount: byteCount)
   }
 
   /// Create a `RawSpan` over the memory represented by a `Span<T>`
@@ -103,8 +99,7 @@ extension RawSpan {
   public init<T: BitwiseCopyable>(_ span: borrowing Span<T>) {
     self.init(
       _unchecked: UnsafeRawPointer(span._start),
-      byteCount: span.count * MemoryLayout<T>.stride,
-      owner: span
+      byteCount: span.count * MemoryLayout<T>.stride
     )
   }
 }
@@ -243,8 +238,7 @@ extension RawSpan {
   public func extracting(unchecked bounds: Range<Int>) -> Self {
     RawSpan(
       _unchecked: _pointer?.advanced(by: bounds.lowerBound),
-      byteCount: bounds.count,
-      owner: self
+      byteCount: bounds.count
     )
   }
 
@@ -516,7 +510,7 @@ extension RawSpan {
   public func extracting(first maxLength: Int) -> Self {
     precondition(maxLength >= 0, "Can't have a prefix of negative length.")
     let newCount = min(maxLength, byteCount)
-    return Self(_unchecked: _pointer, byteCount: newCount, owner: self)
+    return Self(_unchecked: _pointer, byteCount: newCount)
   }
 
   /// Returns a span over all but the given number of trailing bytes.
@@ -537,7 +531,7 @@ extension RawSpan {
   public func extracting(droppingLast k: Int) -> Self {
     precondition(k >= 0, "Can't drop a negative number of elements.")
     let dc = min(k, byteCount)
-    return Self(_unchecked: _pointer, byteCount: byteCount&-dc, owner: self)
+    return Self(_unchecked: _pointer, byteCount: byteCount&-dc)
   }
 
   /// Returns a span containing the trailing bytes of the span,
@@ -560,7 +554,7 @@ extension RawSpan {
     precondition(maxLength >= 0, "Can't have a suffix of negative length.")
     let newCount = min(maxLength, byteCount)
     let newStart = _pointer?.advanced(by: byteCount&-newCount)
-    return Self(_unchecked: newStart, byteCount: newCount, owner: self)
+    return Self(_unchecked: newStart, byteCount: newCount)
   }
 
   /// Returns a span over all but the given number of initial bytes.
@@ -582,7 +576,7 @@ extension RawSpan {
     precondition(k >= 0, "Can't drop a negative number of elements.")
     let dc = min(k, byteCount)
     let newStart = _pointer?.advanced(by: dc)
-    return Self(_unchecked: newStart, byteCount: byteCount&-dc, owner: self)
+    return Self(_unchecked: newStart, byteCount: byteCount&-dc)
   }
 }
 
