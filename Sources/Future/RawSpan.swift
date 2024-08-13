@@ -90,6 +90,60 @@ extension RawSpan {
     self.init(_unchecked: pointer, byteCount: byteCount)
   }
 
+  /// Unsafely create a `RawSpan` over initialized memory.
+  ///
+  /// The memory in `buffer` must be owned by the instance `owner`,
+  /// meaning that as long as `owner` is alive the memory will remain valid.
+  ///
+  /// - Parameters:
+  ///   - buffer: an `UnsafeRawBufferPointer` to initialized memory.
+  ///   - owner: a binding whose lifetime must exceed that of
+  ///            the newly created `RawSpan`.
+  @_alwaysEmitIntoClient
+  public init<T: BitwiseCopyable>(
+    _unsafeElements buffer: UnsafeBufferPointer<T>
+  ) -> dependsOn(immortal) Self {
+    self.init(_unsafeBytes: UnsafeRawBufferPointer(buffer))
+  }
+
+  /// Unsafely create a `RawSpan` over initialized memory.
+  ///
+  /// The memory in `buffer` must be owned by the instance `owner`,
+  /// meaning that as long as `owner` is alive the memory will remain valid.
+  ///
+  /// - Parameters:
+  ///   - buffer: an `UnsafeMutableRawBufferPointer` to initialized memory.
+  ///   - owner: a binding whose lifetime must exceed that of
+  ///            the newly created `RawSpan`.
+  @_alwaysEmitIntoClient
+  public init<T: BitwiseCopyable>(
+    _unsafeElements buffer: UnsafeMutableBufferPointer<T>
+  ) -> dependsOn(immortal) Self {
+    self.init(_unsafeElements: UnsafeBufferPointer(buffer))
+  }
+
+  /// Unsafely create a `RawSpan` over initialized memory.
+  ///
+  /// The memory over `count` bytes starting at
+  /// `pointer` must be owned by the instance `owner`,
+  /// meaning that as long as `owner` is alive the memory will remain valid.
+  ///
+  /// - Parameters:
+  ///   - pointer: a pointer to the first initialized byte.
+  ///   - byteCount: the number of initialized bytes in the span.
+  ///   - owner: a binding whose lifetime must exceed that of
+  ///            the newly created `RawSpan`.
+  @_alwaysEmitIntoClient
+  public init<T: BitwiseCopyable>(
+    _unsafeStart pointer: UnsafePointer<T>,
+    count: Int
+  ) -> dependsOn(immortal) Self {
+    precondition(count >= 0, "Count must not be negative")
+    self.init(
+      _unchecked: pointer, byteCount: count*MemoryLayout<T>.stride
+    )
+  }
+
   /// Create a `RawSpan` over the memory represented by a `Span<T>`
   ///
   /// - Parameters:
