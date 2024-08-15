@@ -47,27 +47,33 @@ extension Data {
 }
 
 extension Array {
-  public func withSpan<E: Error, Result>(
+  public func withSpan<E: Error, Result: ~Copyable>(
     _ body: (_ elements: Span<Element>) throws(E) -> Result
   ) throws(E) -> Result {
-    let result: Swift.Result<Result, E> = withUnsafeBufferPointer {
-      do throws(E) {
-        return .success(try body(Span(_unsafeElements: $0)))
-      } catch {
-        return .failure(error)
+    let result = withUnsafeTemporaryAllocation(
+        of: Swift.Result<Result, E>.self, capacity: 1
+    ) {
+      buffer -> Swift.Result<Result, E> in
+      self.withUnsafeBufferPointer {
+        elements in
+        do throws(E) {
+          let result = try body(Span(_unsafeElements: elements))
+          buffer.initializeElement(at: 1, to: .success(result))
+        } catch {
+          buffer.initializeElement(at: 1, to: .failure(error))
+        }
       }
+      return buffer.moveElement(from: 1)
     }
-    switch result {
+    switch consume result {
     case .success(let s): return s
     case .failure(let e): throw e
     }
   }
-}
 
-extension Array where Element: BitwiseCopyable {
   public func withBytes<E: Error, Result>(
     _ body: (_ bytes: RawSpan) throws(E) -> Result
-  ) throws(E) -> Result {
+  ) throws(E) -> Result where Element: BitwiseCopyable {
     let result: Swift.Result<Result, E> = withUnsafeBytes {
       do throws(E) {
         return .success(try body(RawSpan(_unsafeBytes: $0)))
