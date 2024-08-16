@@ -12,6 +12,50 @@
 
 import struct Foundation.Data
 
+extension UnsafeBufferPointer {
+  public func withSpan<E: Error, Result: ~Copyable>(
+    _ body: (_ elements: Span<Element>) throws(E) -> Result
+  ) throws(E) -> Result {
+    try body(Span(_unsafeElements: self))
+  }
+
+  public func withBytes<E: Error, Result: ~Copyable>(
+    _ body: (_ elements: RawSpan) throws(E) -> Result
+  ) throws(E) -> Result where Element: BitwiseCopyable {
+    try body(RawSpan(_unsafeBytes: UnsafeRawBufferPointer(self)))
+  }
+}
+
+extension UnsafeMutableBufferPointer {
+  public func withSpan<E: Error, Result: ~Copyable>(
+    _ body: (_ elements: Span<Element>) throws(E) -> Result
+  ) throws(E) -> Result {
+    try body(Span(_unsafeElements: self))
+  }
+
+  public func withBytes<E: Error, Result: ~Copyable>(
+    _ body: (_ elements: RawSpan) throws(E) -> Result
+  ) throws(E) -> Result where Element: BitwiseCopyable {
+    try body(RawSpan(_unsafeBytes: UnsafeRawBufferPointer(self)))
+  }
+}
+
+extension UnsafeRawBufferPointer {
+  public func withBytes<E: Error, Result: ~Copyable>(
+    _ body: (_ elements: RawSpan) throws(E) -> Result
+  ) throws(E) -> Result {
+    try body(RawSpan(_unsafeBytes: self))
+  }
+}
+
+extension UnsafeMutableRawBufferPointer {
+  public func withBytes<E: Error, Result: ~Copyable>(
+    _ body: (_ elements: RawSpan) throws(E) -> Result
+  ) throws(E) -> Result {
+    try body(RawSpan(_unsafeBytes: self))
+  }
+}
+
 extension Data {
   public func withSpan<E: Error, Result>(
     _ body: (_ elements: Span<UInt8>) throws(E) -> Result
