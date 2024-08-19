@@ -91,6 +91,36 @@ extension Data {
 }
 
 extension Array {
+
+  /// Calls a closure with a `Span` of the array's contiguous storage.
+  ///
+  /// Often, the optimizer can eliminate bounds checks within an array
+  /// algorithm, but when that fails, invoking the same algorithm on the
+  /// buffer pointer passed into your closure lets you trade safety for speed.
+  ///
+  /// The following example shows how you can iterate over the contents of the
+  /// buffer pointer:
+  ///
+  ///     let numbers = [1, 2, 3, 4, 5]
+  ///     let sum = numbers.withUnsafeBufferPointer { buffer -> Int in
+  ///         var result = 0
+  ///         for i in stride(from: buffer.startIndex, to: buffer.endIndex, by: 2) {
+  ///             result += buffer[i]
+  ///         }
+  ///         return result
+  ///     }
+  ///     // 'sum' == 9
+  ///
+  /// The pointer passed as an argument to `body` is valid only during the
+  /// execution of `withUnsafeBufferPointer(_:)`. Do not store or return the
+  /// pointer for later use.
+  ///
+  /// - Parameter body: A closure with an `UnsafeBufferPointer` parameter that
+  ///   points to the contiguous storage for the array.  If no such storage exists, it is created. If
+  ///   `body` has a return value, that value is also used as the return value
+  ///   for the `withUnsafeBufferPointer(_:)` method. The pointer argument is
+  ///   valid only for the duration of the method's execution.
+  /// - Returns: The return value, if any, of the `body` closure parameter.
   public func withSpan<E: Error, Result: ~Copyable>(
     _ body: (_ elements: Span<Element>) throws(E) -> Result
   ) throws(E) -> Result {
