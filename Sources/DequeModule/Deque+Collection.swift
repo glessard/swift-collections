@@ -165,7 +165,7 @@ extension Deque: Sequence {
   }
 }
 
-extension Deque.Iterator: Sendable where Element: Sendable {}
+extension Deque.Iterator: @unchecked Sendable where Element: Sendable {}
 
 extension Deque: RandomAccessCollection {
   public typealias Index = Int
