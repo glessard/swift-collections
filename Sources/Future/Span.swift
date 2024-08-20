@@ -10,26 +10,25 @@
 //
 //===----------------------------------------------------------------------===//
 
+import Builtin
+
 // A Span<Element> represents a span of memory which
 // contains initialized instances of `Element`.
 @frozen
 public struct Span<Element: ~Copyable /*& ~Escapable*/>: Copyable, ~Escapable {
-  @usableFromInline let _buffer: UnsafeBufferPointer<Element>
+  @usableFromInline let _pointer: UnsafeRawPointer?
 
   @usableFromInline @inline(__always)
-  var _pointer: UnsafePointer<Element>? { _buffer.baseAddress }
+  var _start: UnsafeRawPointer { _pointer.unsafelyUnwrapped }
 
-  @usableFromInline @inline(__always)
-  var _start: UnsafePointer<Element> { _pointer.unsafelyUnwrapped }
-
-  @usableFromInline @inline(__always)
-  var _count: Int { _buffer.count }
+  @usableFromInline let _count: Int
 
   @inlinable @inline(__always)
   internal init(
     _unchecked elements: UnsafeBufferPointer<Element>
   ) -> dependsOn(immortal) Self {
-    _buffer = elements
+    _pointer = .init(elements.baseAddress)
+    _count = elements.count
   }
 
   @_alwaysEmitIntoClient
@@ -37,7 +36,8 @@ public struct Span<Element: ~Copyable /*& ~Escapable*/>: Copyable, ~Escapable {
     _unchecked start: UnsafePointer<Element>?,
     count: Int
   ) -> dependsOn(immortal) Self {
-    self.init(_unchecked: .init(start: start, count: count))
+    _pointer = .init(start)
+    _count = count
   }
 }
 
@@ -443,7 +443,10 @@ extension Span where Element: ~Copyable /*& ~Escapable*/ {
   @inlinable @inline(__always)
   public subscript(unchecked position: Int) -> Element {
     _read {
-      yield _start.advanced(by: position).pointee
+      let element = _start.advanced(by: position&*MemoryLayout<Element>.stride)
+      let binding = Builtin.bindMemory(element._rawValue, count._builtinWordValue, Element.self)
+      defer { Builtin.rebindMemory(element._rawValue, binding) }
+      yield UnsafePointer<Element>(element._rawValue).pointee
     }
   }
 }
