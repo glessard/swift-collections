@@ -67,7 +67,7 @@ extension RigidArray: RandomAccessContainer where Element: ~Copyable {
       let end = _offset + Swift.min(maximumCount, _items.count - _offset)
       defer { _offset = end }
       let chunk = _items.extracting(Range(uncheckedBounds: (_offset, end)))
-      return Span(unsafeElements: chunk, owner: self)
+      return Span(unsafeElements: chunk)
     }
   }
 
