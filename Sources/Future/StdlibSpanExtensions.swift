@@ -10,9 +10,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-import struct Foundation.Data
-
-extension UnsafeBufferPointer {
+extension UnsafeBufferPointer where Element: ~Copyable {
   public func withSpan<E: Error, Result: ~Copyable>(
     _ body: (_ elements: Span<Element>) throws(E) -> Result
   ) throws(E) -> Result {
@@ -26,7 +24,7 @@ extension UnsafeBufferPointer {
   }
 }
 
-extension UnsafeMutableBufferPointer {
+extension UnsafeMutableBufferPointer where Element: ~Copyable {
   public func withSpan<E: Error, Result: ~Copyable>(
     _ body: (_ elements: Span<Element>) throws(E) -> Result
   ) throws(E) -> Result {
@@ -55,6 +53,53 @@ extension UnsafeMutableRawBufferPointer {
     try body(RawSpan(_unsafeBytes: self))
   }
 }
+
+extension Slice {
+  public func withSpan<Element, E: Error, Result: ~Copyable>(
+    _ body: (_ elements: Span<Element>) throws(E) -> Result
+  ) throws(E) -> Result
+  where Base == UnsafeBufferPointer<Element> {
+    try body(Span(_unsafeElements: UnsafeBufferPointer(rebasing: self)))
+  }
+
+  public func withBytes<Element: BitwiseCopyable, E: Error, Result: ~Copyable>(
+    _ body: (_ elements: RawSpan) throws(E) -> Result
+  ) throws(E) -> Result
+  where Base == UnsafeBufferPointer<Element> {
+    try body(RawSpan(_unsafeBytes: .init(UnsafeBufferPointer(rebasing: self))))
+  }
+
+  public func withSpan<Element, E: Error, Result: ~Copyable>(
+    _ body: (_ elements: Span<Element>) throws(E) -> Result
+  ) throws(E) -> Result
+  where Base == UnsafeMutableBufferPointer<Element> {
+    try body(Span(_unsafeElements: UnsafeBufferPointer(rebasing: self)))
+  }
+
+  public func withBytes<Element: BitwiseCopyable, E: Error, Result: ~Copyable>(
+    _ body: (_ elements: RawSpan) throws(E) -> Result
+  ) throws(E) -> Result
+  where Base == UnsafeMutableBufferPointer<Element> {
+    try body(RawSpan(_unsafeBytes: .init(UnsafeBufferPointer(rebasing: self))))
+  }
+
+  public func withBytes<E: Error, Result: ~Copyable>(
+    _ body: (_ elements: RawSpan) throws(E) -> Result
+  ) throws(E) -> Result
+  where Base == UnsafeRawBufferPointer {
+    try body(RawSpan(_unsafeBytes: UnsafeRawBufferPointer(rebasing: self)))
+  }
+
+  public func withBytes<E: Error, Result: ~Copyable>(
+    _ body: (_ elements: RawSpan) throws(E) -> Result
+  ) throws(E) -> Result
+  where Base == UnsafeMutableRawBufferPointer {
+    try body(RawSpan(_unsafeBytes: UnsafeRawBufferPointer(rebasing: self)))
+  }
+}
+
+#if false //FIXME: rdar://134382237
+import struct Foundation.Data
 
 extension Data {
   public func withSpan<E: Error, Result>(
@@ -89,6 +134,7 @@ extension Data {
     }
   }
 }
+#endif
 
 extension Array {
 
@@ -122,7 +168,7 @@ extension Array {
   ///   valid only for the duration of the method's execution.
   /// - Returns: The return value, if any, of the `body` closure parameter.
   public func withSpan<E: Error, Result: ~Copyable>(
-    _ body: (_ elements: Span<Element>) throws(E) -> Result
+    _ body: (_ elements:  Span<Element>) throws(E) -> Result
   ) throws(E) -> Result {
     let result = withUnsafeTemporaryAllocation(
         of: Swift.Result<Result, E>.self, capacity: 1
@@ -146,7 +192,7 @@ extension Array {
   }
 
   public func withBytes<E: Error, Result>(
-    _ body: (_ bytes: RawSpan) throws(E) -> Result
+    _ body: (_ bytes:  RawSpan) throws(E) -> Result
   ) throws(E) -> Result where Element: BitwiseCopyable {
     let result: Swift.Result<Result, E> = withUnsafeBytes {
       do throws(E) {
@@ -164,7 +210,7 @@ extension Array {
 
 extension ContiguousArray {
   public func withSpan<E: Error, Result>(
-    _ body: (_ elements: Span<Element>) throws(E) -> Result
+    _ body: (_ elements:  Span<Element>) throws(E) -> Result
   ) throws(E) -> Result {
     let result: Swift.Result<Result, E> = withUnsafeBufferPointer {
       do throws(E) {
@@ -182,7 +228,7 @@ extension ContiguousArray {
 
 extension ContiguousArray where Element: BitwiseCopyable {
   public func withBytes<E: Error, Result>(
-    _ body: (_ bytes: RawSpan) throws(E) -> Result
+    _ body: (_ bytes:  RawSpan) throws(E) -> Result
   ) throws(E) -> Result {
     let result: Swift.Result<Result, E> = withUnsafeBytes {
       do throws(E) {
@@ -200,7 +246,7 @@ extension ContiguousArray where Element: BitwiseCopyable {
 
 extension ArraySlice {
   public func withSpan<E: Error, Result>(
-    _ body: (_ elements: Span<Element>) throws(E) -> Result
+    _ body: (_ elements:  Span<Element>) throws(E) -> Result
   ) throws(E) -> Result {
     let result: Swift.Result<Result, E> = withUnsafeBufferPointer {
       do throws(E) {
@@ -218,7 +264,7 @@ extension ArraySlice {
 
 extension ArraySlice where Element: BitwiseCopyable {
   public func withBytes<E: Error, Result>(
-    _ body: (_ bytes: RawSpan) throws(E) -> Result
+    _ body: (_ bytes:  RawSpan) throws(E) -> Result
   ) throws(E) -> Result {
     let result: Swift.Result<Result, E> = withUnsafeBytes {
       do throws(E) {
@@ -236,7 +282,7 @@ extension ArraySlice where Element: BitwiseCopyable {
 
 extension String.UTF8View {
   public func withSpan<E: Error, Result>(
-    _ body: (_ elements: Span<UTF8.CodeUnit>) throws(E) -> Result
+    _ body: (_ elements:  Span<UTF8.CodeUnit>) throws(E) -> Result
   ) throws(E) -> Result {
     let result: Swift.Result<Result, E>? = withContiguousStorageIfAvailable {
       do throws(E) {
@@ -253,7 +299,7 @@ extension String.UTF8View {
   }
 
   public func withBytes<E: Error, Result>(
-    _ body: (_ bytes: RawSpan) throws(E) -> Result
+    _ body: (_ bytes:  RawSpan) throws(E) -> Result
   ) throws(E) -> Result {
     let result: Swift.Result<Result, E>? = withContiguousStorageIfAvailable {
       do throws(E) {
@@ -272,7 +318,7 @@ extension String.UTF8View {
 
 extension Substring.UTF8View {
   public func withSpan<E: Error, Result>(
-    _ body: (_ elements: Span<UTF8.CodeUnit>) throws(E) -> Result
+    _ body: (_ elements:  Span<UTF8.CodeUnit>) throws(E) -> Result
   ) throws(E) -> Result {
     let result: Swift.Result<Result, E>? = withContiguousStorageIfAvailable {
       do throws(E) {
@@ -289,7 +335,7 @@ extension Substring.UTF8View {
   }
 
   public func withBytes<E: Error, Result>(
-    _ body: (_ bytes: RawSpan) throws(E) -> Result
+    _ body: (_ bytes:  RawSpan) throws(E) -> Result
   ) throws(E) -> Result {
     let result: Swift.Result<Result, E>? = withContiguousStorageIfAvailable {
       do throws(E) {
@@ -308,7 +354,7 @@ extension Substring.UTF8View {
 
 extension CollectionOfOne {
   public func withSpan<E: Error, Result>(
-    _ body: (_ elements: Span<Element>) throws(E) -> Result
+    _ body: (_ elements:  Span<Element>) throws(E) -> Result
   ) throws(E) -> Result {
     var collection = self
     let result: Swift.Result<Result, E> = withUnsafePointer(to: &collection) {
@@ -329,7 +375,7 @@ extension CollectionOfOne {
 
 extension CollectionOfOne where Element: BitwiseCopyable {
   public func withBytes<E: Error, Result>(
-    _ body: (_ bytes: RawSpan) throws(E) -> Result
+    _ body: (_ bytes:  RawSpan) throws(E) -> Result
   ) throws(E) -> Result {
     var collection = self
     let r: Swift.Result<Result, E> = Swift.withUnsafeBytes(of: &collection) {
@@ -348,7 +394,9 @@ extension CollectionOfOne where Element: BitwiseCopyable {
 
 extension KeyValuePairs {
   public func withSpan<E: Error, Result>(
-    _ body: (_ elements: Span<(key: Key, value: Value)>) throws(E) -> Result
+    _ body: (
+      _ elements:  Span<(key: Key, value: Value)>
+    ) throws(E) -> Result
   ) throws(E) -> Result {
     try Array(self).withSpan(body)
   }
@@ -359,6 +407,22 @@ extension KeyValuePairs where Element: BitwiseCopyable {
     _ body: (_ bytes: RawSpan) throws(E) -> Result
   ) throws(E) -> Result {
     try Array(self).withBytes(body)
+  }
+}
+
+extension Span where Element: ~Copyable /*& ~Escapable*/ {
+  public consuming func withSpan<E: Error, Result>(
+    _ body: (_ elements: Span<Element>) throws(E) -> Result
+  ) throws(E) -> Result {
+    try body(self)
+  }
+}
+
+extension Span where Element: BitwiseCopyable {
+  public consuming func withBytes<E: Error, Result>(
+    _ body: (_ elements: RawSpan) throws(E) -> Result
+  ) throws(E) -> Result {
+    try body(RawSpan(self))
   }
 }
 

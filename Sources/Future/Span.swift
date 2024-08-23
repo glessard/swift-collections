@@ -16,19 +16,27 @@ import Builtin
 // contains initialized instances of `Element`.
 @frozen
 public struct Span<Element: ~Copyable /*& ~Escapable*/>: Copyable, ~Escapable {
-  @usableFromInline let _pointer: UnsafeRawPointer?
+  @usableFromInline let _buffer: UnsafeBufferPointer<Element>
 
   @usableFromInline @inline(__always)
-  var _start: UnsafeRawPointer { _pointer.unsafelyUnwrapped }
+  var _pointer: UnsafePointer<Element>? { _buffer.baseAddress }
 
-  @usableFromInline let _count: Int
+  @usableFromInline @inline(__always)
+  var _start: UnsafePointer<Element> { _pointer.unsafelyUnwrapped }
+
+//  @usableFromInline @inline(__always)
+//  var _start: UnsafeRawPointer { _pointer.unsafelyUnwrapped }
+
+  @usableFromInline @inline(__always)
+  var _count: Int { _buffer.count }
 
   @inlinable @inline(__always)
   internal init(
     _unchecked elements: UnsafeBufferPointer<Element>
   ) -> dependsOn(immortal) Self {
-    _pointer = .init(elements.baseAddress)
-    _count = elements.count
+    _buffer = elements
+//    _pointer = .init(elements.baseAddress)
+//    _count = elements.count
   }
 
   @_alwaysEmitIntoClient
@@ -36,8 +44,9 @@ public struct Span<Element: ~Copyable /*& ~Escapable*/>: Copyable, ~Escapable {
     _unchecked start: UnsafePointer<Element>?,
     count: Int
   ) -> dependsOn(immortal) Self {
-    _pointer = .init(start)
-    _count = count
+    self.init(_unchecked: .init(start: start, count: count))
+//    _pointer = .init(start)
+//    _count = count
   }
 }
 

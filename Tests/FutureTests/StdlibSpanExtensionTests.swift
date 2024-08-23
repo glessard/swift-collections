@@ -17,6 +17,7 @@ enum ErrorForTesting: Error, Equatable { case error, errorToo, errorAsWell }
 
 final class StdlibSpanExtensionTests: XCTestCase {
 
+#if false //FIXME: rdar://134382237 -- nightly toolchain cannot `import Darwin`
   func testDataSpan() throws {
     let a = Data(0..<4)
     a.withSpan {
@@ -46,6 +47,7 @@ final class StdlibSpanExtensionTests: XCTestCase {
       XCTAssertEqual(error, .error)
     }
   }
+#endif
 
   func testArraySpan() throws {
     let a = (0..<4).map(String.init(_:))
