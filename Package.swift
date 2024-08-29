@@ -1,4 +1,4 @@
-// swift-tools-version:5.7
+// swift-tools-version:5.10
 //===----------------------------------------------------------------------===//
 //
 // This source file is part of the Swift Collections open source project
@@ -52,7 +52,14 @@ var defines: [String] = [
 //  "COLLECTIONS_SINGLE_MODULE",
 ]
 
-var _settings: [SwiftSetting] = defines.map { .define($0) }
+let _sharedSettings: [SwiftSetting] = defines.map { .define($0) } + [
+  .enableExperimentalFeature("BuiltinModule"),
+  .enableExperimentalFeature("NonescapableTypes"),
+]
+
+let _settings: [SwiftSetting] = _sharedSettings + []
+
+let _testSettings: [SwiftSetting] = _sharedSettings + []
 
 struct CustomTarget {
   enum Kind {
@@ -67,6 +74,7 @@ struct CustomTarget {
   var dependencies: [Target.Dependency]
   var directory: String
   var exclude: [String]
+  var settings: [SwiftSetting]
 }
 
 extension CustomTarget.Kind {
@@ -91,14 +99,16 @@ extension CustomTarget {
     name: String,
     dependencies: [Target.Dependency] = [],
     directory: String? = nil,
-    exclude: [String] = []
+    exclude: [String] = [],
+    settings: [SwiftSetting]? = nil
   ) -> CustomTarget {
     CustomTarget(
       kind: kind,
       name: name,
       dependencies: dependencies,
       directory: directory ?? name,
-      exclude: exclude)
+      exclude: exclude,
+      settings: settings ?? (kind.isTest ? _testSettings : _settings))
   }
 
   func toTarget() -> Target {
@@ -114,7 +124,7 @@ extension CustomTarget {
         dependencies: dependencies,
         path: kind.path(for: directory),
         exclude: exclude,
-        swiftSettings: _settings,
+        swiftSettings: settings,
         linkerSettings: linkerSettings)
     case .test:
       return Target.testTarget(
@@ -122,7 +132,7 @@ extension CustomTarget {
         dependencies: dependencies,
         path: kind.path(for: directory),
         exclude: exclude,
-        swiftSettings: _settings,
+        swiftSettings: settings,
         linkerSettings: linkerSettings)
     }
   }
@@ -169,7 +179,7 @@ extension Array where Element == CustomTarget {
         t.exclude.map { "\(t.name)/\($0)" }
       },
       sources: targets.map { "\($0.name)" },
-      swiftSettings: _settings,
+      swiftSettings: _testSettings,
       linkerSettings: linkerSettings)
   }
 }
@@ -188,9 +198,6 @@ let targets: [CustomTarget] = [
     name: "InternalCollectionsUtilities",
     exclude: [
       "CMakeLists.txt",
-      "Compatibility/UnsafeMutableBufferPointer+SE-0370.swift.gyb",
-      "Compatibility/UnsafeMutablePointer+SE-0370.swift.gyb",
-      "Compatibility/UnsafeRawPointer extensions.swift.gyb",
       "Debugging.swift.gyb",
       "Descriptions.swift.gyb",
       "IntegerTricks/FixedWidthInteger+roundUpToPowerOfTwo.swift.gyb",
@@ -198,13 +205,22 @@ let targets: [CustomTarget] = [
       "IntegerTricks/UInt+first and last set bit.swift.gyb",
       "IntegerTricks/UInt+reversed.swift.gyb",
       "RandomAccessCollection+Offsets.swift.gyb",
-      "Specialize.swift.gyb",
       "UnsafeBitSet/_UnsafeBitSet+Index.swift.gyb",
       "UnsafeBitSet/_UnsafeBitSet+_Word.swift.gyb",
       "UnsafeBitSet/_UnsafeBitSet.swift.gyb",
       "UnsafeBufferPointer+Extras.swift.gyb",
       "UnsafeMutableBufferPointer+Extras.swift.gyb",
     ]),
+
+  .target(
+    kind: .exported,
+    name: "Future",
+    dependencies: ["InternalCollectionsUtilities"],
+    exclude: ["CMakeLists.txt"]),
+  .target(
+    kind: .test,
+    name: "FutureTests",
+    dependencies: ["Future", "_CollectionsTestSupport"]),
 
   .target(
     kind: .exported,
@@ -263,7 +279,9 @@ let targets: [CustomTarget] = [
     name: "_RopeModule",
     dependencies: ["InternalCollectionsUtilities"],
     directory: "RopeModule",
-    exclude: ["CMakeLists.txt"]),
+    exclude: ["CMakeLists.txt"],
+    // FIXME: _modify accessors in RopeModule seem to be broken in Swift 6 mode
+    settings: _sharedSettings),
   .target(
     kind: .test,
     name: "RopeModuleTests",
