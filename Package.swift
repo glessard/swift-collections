@@ -55,6 +55,7 @@ var defines: [String] = [
 let _sharedSettings: [SwiftSetting] = defines.map { .define($0) } + [
   .enableExperimentalFeature("BuiltinModule"),
   .enableExperimentalFeature("NonescapableTypes"),
+  .enableExperimentalFeature("AllowUnsafeAttribute"),
 ]
 
 let _settings: [SwiftSetting] = _sharedSettings + []
