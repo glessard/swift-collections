@@ -27,7 +27,9 @@ extension NewArray {
     // FIXME: This is what I want to write; alas, lifetimes are messed up.
     return _storage.value.storage
 #else
-    return Span(_unsafeElements: _storage.value._items)
+    let pointer = _storage.value._items.baseAddress!
+    let span = Span(_unsafeStart: pointer, count: _storage.value._count)
+    return _overrideLifetime(of: span, to: self)
 #endif
   }
 }

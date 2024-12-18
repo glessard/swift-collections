@@ -18,9 +18,10 @@ extension UnsafeBufferPointer where Element: ~Copyable {
   }
 
   public func withBytes<E: Error, Result: ~Copyable>(
-    _ body: (_ elements: RawSpan) throws(E) -> Result
+    _ body: (_ bytes: RawSpan) throws(E) -> Result
   ) throws(E) -> Result where Element: BitwiseCopyable {
-    try body(RawSpan(_unsafeBytes: UnsafeRawBufferPointer(self)))
+    let bytes = UnsafeRawBufferPointer(self)
+    return try body(RawSpan(_unsafeBytes: bytes))
   }
 }
 
@@ -32,15 +33,16 @@ extension UnsafeMutableBufferPointer where Element: ~Copyable {
   }
 
   public func withBytes<E: Error, Result: ~Copyable>(
-    _ body: (_ elements: RawSpan) throws(E) -> Result
+    _ body: (_ bytes: RawSpan) throws(E) -> Result
   ) throws(E) -> Result where Element: BitwiseCopyable {
-    try body(RawSpan(_unsafeBytes: UnsafeRawBufferPointer(self)))
+    let bytes = UnsafeRawBufferPointer(self)
+    return try body(RawSpan(_unsafeBytes: bytes))
   }
 }
 
 extension UnsafeRawBufferPointer {
   public func withBytes<E: Error, Result: ~Copyable>(
-    _ body: (_ elements: RawSpan) throws(E) -> Result
+    _ body: (_ bytes: RawSpan) throws(E) -> Result
   ) throws(E) -> Result {
     try body(RawSpan(_unsafeBytes: self))
   }
@@ -48,7 +50,7 @@ extension UnsafeRawBufferPointer {
 
 extension UnsafeMutableRawBufferPointer {
   public func withBytes<E: Error, Result: ~Copyable>(
-    _ body: (_ elements: RawSpan) throws(E) -> Result
+    _ body: (_ bytes: RawSpan) throws(E) -> Result
   ) throws(E) -> Result {
     try body(RawSpan(_unsafeBytes: self))
   }
@@ -59,42 +61,48 @@ extension Slice {
     _ body: (_ elements: Span<Element>) throws(E) -> Result
   ) throws(E) -> Result
   where Base == UnsafeBufferPointer<Element> {
-    try body(Span(_unsafeElements: UnsafeBufferPointer(rebasing: self)))
+    let buffer = UnsafeBufferPointer(rebasing: self)
+    return try body(Span(_unsafeElements: buffer))
   }
 
   public func withBytes<Element: BitwiseCopyable, E: Error, Result: ~Copyable>(
-    _ body: (_ elements: RawSpan) throws(E) -> Result
+    _ body: (_ bytes: RawSpan) throws(E) -> Result
   ) throws(E) -> Result
   where Base == UnsafeBufferPointer<Element> {
-    try body(RawSpan(_unsafeBytes: .init(UnsafeBufferPointer(rebasing: self))))
+    let bytes = UnsafeRawBufferPointer(UnsafeBufferPointer(rebasing: self))
+    return try body(RawSpan(_unsafeBytes: bytes))
   }
 
   public func withSpan<Element, E: Error, Result: ~Copyable>(
     _ body: (_ elements: Span<Element>) throws(E) -> Result
   ) throws(E) -> Result
   where Base == UnsafeMutableBufferPointer<Element> {
-    try body(Span(_unsafeElements: UnsafeBufferPointer(rebasing: self)))
+    let buffer = UnsafeBufferPointer(rebasing: self)
+    return try body(Span(_unsafeElements: buffer))
   }
 
   public func withBytes<Element: BitwiseCopyable, E: Error, Result: ~Copyable>(
-    _ body: (_ elements: RawSpan) throws(E) -> Result
+    _ body: (_ bytes: RawSpan) throws(E) -> Result
   ) throws(E) -> Result
   where Base == UnsafeMutableBufferPointer<Element> {
-    try body(RawSpan(_unsafeBytes: .init(UnsafeBufferPointer(rebasing: self))))
+    let bytes = UnsafeRawBufferPointer(UnsafeBufferPointer(rebasing: self))
+    return try body(RawSpan(_unsafeBytes: bytes))
   }
 
   public func withBytes<E: Error, Result: ~Copyable>(
-    _ body: (_ elements: RawSpan) throws(E) -> Result
+    _ body: (_ bytes: RawSpan) throws(E) -> Result
   ) throws(E) -> Result
   where Base == UnsafeRawBufferPointer {
-    try body(RawSpan(_unsafeBytes: UnsafeRawBufferPointer(rebasing: self)))
+    let bytes = UnsafeRawBufferPointer(rebasing: self)
+    return try body(RawSpan(_unsafeBytes: bytes))
   }
 
   public func withBytes<E: Error, Result: ~Copyable>(
-    _ body: (_ elements: RawSpan) throws(E) -> Result
+    _ body: (_ bytes: RawSpan) throws(E) -> Result
   ) throws(E) -> Result
   where Base == UnsafeMutableRawBufferPointer {
-    try body(RawSpan(_unsafeBytes: UnsafeRawBufferPointer(rebasing: self)))
+    let bytes = UnsafeRawBufferPointer(rebasing: self)
+    return try body(RawSpan(_unsafeBytes: bytes))
   }
 }
 
@@ -485,7 +493,7 @@ extension Span where Element: ~Copyable /*& ~Escapable*/ {
 
 extension Span where Element: BitwiseCopyable {
   public consuming func withBytes<E: Error, Result: ~Copyable>(
-    _ body: (_ elements: RawSpan) throws(E) -> Result
+    _ body: (_ bytes: RawSpan) throws(E) -> Result
   ) throws(E) -> Result {
     try body(RawSpan(_elements: self))
   }
@@ -493,7 +501,7 @@ extension Span where Element: BitwiseCopyable {
 
 extension RawSpan {
   public consuming func withBytes<E: Error, Result: ~Copyable>(
-    _ body: (_ elements: RawSpan) throws(E) -> Result
+    _ body: (_ bytes: RawSpan) throws(E) -> Result
   ) throws(E) -> Result {
     try body(self)
   }

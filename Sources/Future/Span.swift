@@ -47,15 +47,6 @@ public struct Span<Element: ~Copyable & ~Escapable>
   @usableFromInline
   internal let _count: Int
 
-  /// FIXME: Remove once supported old compilers can recognize lifetime dependence
-  @_unsafeNonescapableResult
-  @_alwaysEmitIntoClient
-  @inline(__always)
-  internal init() {
-    _pointer = nil
-    _count = 0
-  }
-
   /// Unsafely create a `Span` over initialized memory.
   ///
   /// `pointer` must point to a region of `count` initialized instances,
@@ -73,10 +64,10 @@ public struct Span<Element: ~Copyable & ~Escapable>
   @inline(__always)
   @lifetime(borrow pointer)
   internal init(
-    _unchecked pointer: borrowing UnsafeRawPointer?,
+    _unchecked pointer: UnsafeRawPointer?,
     count: Int
   ) {
-    _pointer = copy pointer
+    _pointer = pointer
     _count = count
   }
 }
@@ -96,10 +87,10 @@ extension Span where Element: ~Copyable {
   @_alwaysEmitIntoClient
   @lifetime(borrow buffer)
   public init(
-    _unsafeElements buffer: borrowing UnsafeBufferPointer<Element>
+    _unsafeElements buffer: UnsafeBufferPointer<Element>
   ) {
     //FIXME: Workaround for https://github.com/swiftlang/swift/issues/77235
-    let baseAddress = buffer.baseAddress
+    let baseAddress = UnsafeRawPointer(buffer.baseAddress)
     precondition(
       ((Int(bitPattern: baseAddress) &
         (MemoryLayout<Element>.alignment &- 1)) == 0),
@@ -122,7 +113,7 @@ extension Span where Element: ~Copyable {
   @_alwaysEmitIntoClient
   @lifetime(borrow buffer)
   public init(
-    _unsafeElements buffer: borrowing UnsafeMutableBufferPointer<Element>
+    _unsafeElements buffer: UnsafeMutableBufferPointer<Element>
   ) {
     let buf = UnsafeBufferPointer(buffer)
     let span = Span(_unsafeElements: buf)
@@ -144,7 +135,7 @@ extension Span where Element: ~Copyable {
   @_alwaysEmitIntoClient
   @lifetime(borrow pointer)
   public init(
-    _unsafeStart pointer: borrowing UnsafePointer<Element>,
+    _unsafeStart pointer: UnsafePointer<Element>,
     count: Int
   ) {
     precondition(count >= 0, "Count must not be negative")
@@ -216,7 +207,7 @@ extension Span where Element: BitwiseCopyable {
   @_alwaysEmitIntoClient
   @lifetime(borrow buffer)
   public init(
-    _unsafeBytes buffer: borrowing UnsafeRawBufferPointer
+    _unsafeBytes buffer: UnsafeRawBufferPointer
   ) {
     //FIXME: Workaround for https://github.com/swiftlang/swift/issues/77235
     let baseAddress = buffer.baseAddress
@@ -251,7 +242,7 @@ extension Span where Element: BitwiseCopyable {
   @_alwaysEmitIntoClient
   @lifetime(borrow buffer)
   public init(
-    _unsafeBytes buffer: borrowing UnsafeMutableRawBufferPointer
+    _unsafeBytes buffer: UnsafeMutableRawBufferPointer
   ) {
     let rawBuffer = UnsafeRawBufferPointer(buffer)
     let span = Span(_unsafeBytes: rawBuffer)
@@ -277,7 +268,7 @@ extension Span where Element: BitwiseCopyable {
   @_alwaysEmitIntoClient
   @lifetime(borrow pointer)
   public init(
-    _unsafeStart pointer: borrowing UnsafeRawPointer,
+    _unsafeStart pointer: UnsafeRawPointer,
     byteCount: Int
   ) {
     precondition(byteCount >= 0, "Count must not be negative")

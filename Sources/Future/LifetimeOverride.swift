@@ -37,3 +37,16 @@ public func _overrideLifetime<
 ) -> T {
   dependent
 }
+
+@_unsafeNonescapableResult
+@inlinable @inline(__always)
+@lifetime(source)
+public func _overrideLifetime<
+  T: ~Copyable & ~Escapable,
+  U: ~Copyable & ~Escapable
+>(
+  of dependent: consuming T,
+  mutating source: inout U
+) -> T {
+  dependent
+}

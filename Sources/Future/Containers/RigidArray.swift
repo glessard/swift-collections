@@ -60,7 +60,9 @@ extension RigidArray where Element: ~Copyable {
 
 extension RigidArray where Element: ~Copyable {
   public var storage: Span<Element> {
-    Span(_unsafeElements: _items)
+    let pointer = _storage.baseAddress!
+    let span = Span(_unsafeStart: pointer, count: count)
+    return _overrideLifetime(of: span, to: self)
   }
 }
 
@@ -85,7 +87,9 @@ extension RigidArray: RandomAccessContainer where Element: ~Copyable {
       let end = _offset + Swift.min(maximumCount, _items.count - _offset)
       defer { _offset = end }
       let chunk = _items.extracting(Range(uncheckedBounds: (_offset, end)))
-      return Span(_unsafeElements: chunk)
+      let chunkStart = chunk.baseAddress!
+      let span = Span(_unsafeStart: chunkStart, count: chunk.count)
+      return _overrideLifetime(of: span, to: self)
     }
   }
 

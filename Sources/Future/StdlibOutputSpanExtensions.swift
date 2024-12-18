@@ -23,10 +23,11 @@ extension Array {
           _initializing: buffer.baseAddress.unsafelyUnwrapped,
           capacity: buffer.count
         )
-        try initializer(&output)
-        let initialized = output.relinquishBorrowedMemory()
-        assert(initialized.baseAddress == buffer.baseAddress)
-        count = initialized.count
+#warning("solve escape analysis issue")
+//        try initializer(&output)
+//        let initialized = output.relinquishBorrowedMemory()
+//        assert(initialized.baseAddress == buffer.baseAddress)
+//        count = initialized.count
       }
     )
   }
@@ -49,10 +50,12 @@ extension String {
           _initializing: buffer.baseAddress.unsafelyUnwrapped,
           capacity: capacity
         )
-        try initializer(&output)
-        let initialized = output.relinquishBorrowedMemory()
-        assert(initialized.baseAddress == buffer.baseAddress)
-        return initialized.count
+#warning("solve escape analysis issue")
+//        try initializer(&output)
+//        let initialized = output.relinquishBorrowedMemory()
+//        assert(initialized.baseAddress == buffer.baseAddress)
+//        return initialized.count
+        return 0
       }
     )
   }
@@ -74,10 +77,12 @@ extension Data {
           _initializing: buffer.baseAddress.unsafelyUnwrapped,
           capacity: capacity
         )
-        try initializer(&output)
-        let initialized = output.relinquishBorrowedMemory()
-        assert(initialized.baseAddress == buffer.baseAddress)
-        return initialized.count
+#warning("solve escape analysis issue")
+//        try initializer(&output)
+//        let initialized = output.relinquishBorrowedMemory()
+//        assert(initialized.baseAddress == buffer.baseAddress)
+//        return initialized.count
+        return 0
       }
     }
     assert(count <= self.count)

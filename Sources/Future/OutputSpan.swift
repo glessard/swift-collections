@@ -100,10 +100,9 @@ extension OutputSpan where Element: ~Copyable  {
     initialized: Int = 0
   ) {
     precondition(capacity >= 0, "Capacity must be 0 or greater")
-    self.init(
-      _initializing: .init(start: pointer, count: capacity),
-      initialized: initialized
-    )
+    let buffer = UnsafeMutableBufferPointer(start: pointer, count: capacity)
+    let os = OutputSpan(_initializing: buffer, initialized: initialized)
+    self = _overrideLifetime(of: os, to: pointer)
   }
 }
 
@@ -117,7 +116,9 @@ extension OutputSpan {
     _initializing buffer: borrowing Slice<UnsafeMutableBufferPointer<Element>>,
     initialized: Int = 0
   ) {
-    self.init(_initializing: .init(rebasing: buffer), initialized: initialized)
+    let rebased = UnsafeMutableBufferPointer(rebasing: buffer)
+    let os = OutputSpan(_initializing: rebased, initialized: 0)
+    self = _overrideLifetime(of: os, to: buffer)
   }
 }
 
@@ -139,9 +140,11 @@ extension OutputSpan where Element: BitwiseCopyable {
     let (byteCount, stride) = (bytes.count, MemoryLayout<Element>.stride)
     let (count, remainder) = byteCount.quotientAndRemainder(dividingBy: stride)
     precondition(remainder == 0, "Span must contain a whole number of elements")
-    self.init(
-      _unchecked: bytes.baseAddress, capacity: count, initialized: initialized
+    let pointer = bytes.baseAddress
+    let os = OutputSpan(
+      _unchecked: pointer, capacity: count, initialized: initialized
     )
+    self = _overrideLifetime(of: os, to: bytes)
   }
 
   @_disallowFeatureSuppression(NonescapableTypes)
@@ -153,10 +156,9 @@ extension OutputSpan where Element: BitwiseCopyable {
     initialized: Int = 0
   ) {
     precondition(capacity >= 0, "Capacity must be 0 or greater")
-    self.init(
-      _initializing: .init(start: pointer, count: capacity),
-      initialized: initialized
-    )
+    let buffer = UnsafeMutableRawBufferPointer(start: pointer, count: capacity)
+    let os = OutputSpan(_initializing: buffer, initialized: initialized)
+    self = _overrideLifetime(of: os, to: pointer)
   }
 
   @_disallowFeatureSuppression(NonescapableTypes)
@@ -166,10 +168,9 @@ extension OutputSpan where Element: BitwiseCopyable {
     _initializing buffer: borrowing Slice<UnsafeMutableRawBufferPointer>,
     initialized: Int = 0
   ) {
-    self.init(
-      _initializing: UnsafeMutableRawBufferPointer(rebasing: buffer),
-      initialized: initialized
-    )
+    let rebased = UnsafeMutableRawBufferPointer(rebasing: buffer)
+    let os = OutputSpan(_initializing: rebased, initialized: initialized)
+    self = _overrideLifetime(of: os, to: buffer)
   }
 }
 
@@ -377,7 +378,12 @@ extension OutputSpan where Element: ~Copyable {
   @_disallowFeatureSuppression(NonescapableTypes)
   @_alwaysEmitIntoClient
   public var initializedPrefix: Span<Element> {
-    get { Span(_unchecked: _pointer, count: _initialized) }
+    get {
+      let pointer = _pointer?.assumingMemoryBound(to: Element.self)
+      let buffer = UnsafeBufferPointer(start: pointer, count: _initialized)
+      let span = Span(_unsafeElements: buffer)
+      return _overrideLifetime(of: span, to: self)
+    }
   }
 
   @_disallowFeatureSuppression(NonescapableTypes)
