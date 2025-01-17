@@ -19,15 +19,14 @@ extension Array {
     try self.init(
       unsafeUninitializedCapacity: capacity,
       initializingWith: { (buffer, count) in
+        let pointer = buffer.baseAddress.unsafelyUnwrapped
         var output = OutputSpan<Element>(
-          _initializing: buffer.baseAddress.unsafelyUnwrapped,
-          capacity: buffer.count
+          _initializing: pointer, capacity: buffer.count
         )
-#warning("solve escape analysis issue")
-//        try initializer(&output)
-//        let initialized = output.relinquishBorrowedMemory()
-//        assert(initialized.baseAddress == buffer.baseAddress)
-//        count = initialized.count
+        try initializer(&output)
+        let initialized = output.relinquishBorrowedMemory()
+        assert(initialized.baseAddress == buffer.baseAddress)
+        count = initialized.count
       }
     )
   }
@@ -41,21 +40,19 @@ extension String {
   @available(macOS 11, *)
   public init(
     utf8Capacity capacity: Int,
-    initializingWith initializer: (inout OutputSpan<UInt8>) throws -> Void
+    initializingWith initializer: (inout OutputSpan<UTF8.CodeUnit>) throws -> Void
   ) rethrows {
     try self.init(
       unsafeUninitializedCapacity: capacity,
       initializingUTF8With: { buffer in
-        var output = OutputSpan(
-          _initializing: buffer.baseAddress.unsafelyUnwrapped,
-          capacity: capacity
+        let pointer = buffer.baseAddress.unsafelyUnwrapped
+        var output = OutputSpan<UTF8.CodeUnit>(
+          _initializing: pointer, capacity: buffer.count
         )
-#warning("solve escape analysis issue")
-//        try initializer(&output)
-//        let initialized = output.relinquishBorrowedMemory()
-//        assert(initialized.baseAddress == buffer.baseAddress)
-//        return initialized.count
-        return 0
+        try initializer(&output)
+        let initialized = output.relinquishBorrowedMemory()
+        assert(initialized.baseAddress == buffer.baseAddress)
+        return initialized.count
       }
     )
   }
@@ -73,16 +70,14 @@ extension Data {
     let count = try self.withUnsafeMutableBytes { rawBuffer in
       try rawBuffer.withMemoryRebound(to: UInt8.self) { buffer in
         buffer.deinitialize()
-        var output = OutputSpan(
-          _initializing: buffer.baseAddress.unsafelyUnwrapped,
-          capacity: capacity
+        let pointer = buffer.baseAddress.unsafelyUnwrapped
+        var output = OutputSpan<UInt8>(
+          _initializing: pointer, capacity: capacity
         )
-#warning("solve escape analysis issue")
-//        try initializer(&output)
-//        let initialized = output.relinquishBorrowedMemory()
-//        assert(initialized.baseAddress == buffer.baseAddress)
-//        return initialized.count
-        return 0
+        try initializer(&output)
+        let initialized = output.relinquishBorrowedMemory()
+        assert(initialized.baseAddress == buffer.baseAddress)
+        return initialized.count
       }
     }
     assert(count <= self.count)
