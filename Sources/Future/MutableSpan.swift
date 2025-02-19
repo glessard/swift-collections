@@ -162,13 +162,6 @@ extension MutableSpan where Element: ~Copyable {
       Span(_unsafeMutableSpan: self)
     }
   }
-
-//  @_alwaysEmitIntoClient
-//  public func withSpan<E: Error, Result: ~Copyable>(
-//    _ body: (Span<Element>) throws(E) -> Result
-//  ) throws(E) -> Result {
-//    try body(Span(_unsafeMutableSpan: self))
-//  }
 }
 
 @available(macOS 9999, *)
