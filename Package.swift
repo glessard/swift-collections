@@ -57,8 +57,8 @@ let _sharedSettings: [SwiftSetting] = defines.map { .define($0) } + [
   .enableExperimentalFeature("BuiltinModule"),
   .enableExperimentalFeature("LifetimeDependence"),
   .enableExperimentalFeature("RawLayout"),
-  .enableExperimentalFeature("Span"),
   .enableExperimentalFeature("SuppressedAssociatedTypes"),
+  .unsafeFlags(["-disable-availability-checking"]),
 ]
 
 

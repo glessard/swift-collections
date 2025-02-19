@@ -18,7 +18,8 @@ final class RawSpanTests: XCTestCase {
   func testInitWithSpanOfIntegers() {
     let capacity = 4
     Array(0..<capacity).withUnsafeBufferPointer {
-      let span = RawSpan(_elements: Span(_unsafeElements: $0))
+      let intSpan = Span(_unsafeElements: $0)
+      let span = RawSpan(_elements: intSpan)
       XCTAssertEqual(span.byteCount, capacity*MemoryLayout<Int>.stride)
       XCTAssertFalse(span.isEmpty)
     }
@@ -27,7 +28,8 @@ final class RawSpanTests: XCTestCase {
   func testInitWithEmptySpanOfIntegers() {
     let a: [Int] = []
     a.withUnsafeBufferPointer {
-      let span = RawSpan(_elements: Span(_unsafeElements: $0))
+      let intSpan = Span(_unsafeElements: $0)
+      let span = RawSpan(_elements: intSpan)
       XCTAssertTrue(span.isEmpty)
     }
   }
@@ -138,7 +140,8 @@ final class RawSpanTests: XCTestCase {
     let capacity = 4
     let array = Array(0..<capacity)
     array.withUnsafeBufferPointer {
-      let span = RawSpan(_elements: Span(_unsafeElements: $0))
+      let intSpan = Span(_unsafeElements: $0)
+      let span = RawSpan(_elements: intSpan)
       array.withUnsafeBytes {  b1 in
         span.withUnsafeBytes { b2 in
           XCTAssertTrue(b1.elementsEqual(b2))

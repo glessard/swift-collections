@@ -82,7 +82,7 @@ final class OutputSpanTests: XCTestCase {
     let c = 10
     a.initialize {
       for i in 0...c {
-        $0.appendElement(i)
+        $0.append(i)
       }
       let oops = $0.deinitializeLastElement()
       XCTAssertEqual(oops, c)
@@ -126,7 +126,7 @@ final class OutputSpanTests: XCTestCase {
     a.initialize {
       $0.append(fromContentsOf: 0..<c)
 
-      let span = $0.initializedPrefix
+      let span = $0.span
       XCTAssertEqual(span.count, c)
       XCTAssert(span._elementsEqual(0..<c))
     }
@@ -138,7 +138,7 @@ final class OutputSpanTests: XCTestCase {
     a.initialize {
       $0.append(fromContentsOf: Array(0..<c))
 
-      let prefix = $0.initializedPrefix
+      let prefix = $0.span
       XCTAssertEqual(prefix.count, c)
       XCTAssert(prefix._elementsEqual(0..<c))
     }
@@ -207,8 +207,8 @@ final class OutputSpanTests: XCTestCase {
     var a = Allocation(of: 48, Int.self)
     do {
       try a.initialize {
-        $0.appendElement(0)
-        $0.appendElement(1)
+        $0.append(0)
+        $0.append(1)
         XCTAssertTrue($0.count > 0)
         throw MyTestError.error
       }
@@ -229,7 +229,7 @@ final class OutputSpanTests: XCTestCase {
     XCTAssertEqual(span.count, 10)
 
 //    span.withMutableSpan { _ in }
-
+//
 //    span.withMutableSpan {
 //#if false
 //      let b = UnsafeMutableBufferPointer<Int>.allocate(capacity: 8)

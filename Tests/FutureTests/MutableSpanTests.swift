@@ -138,8 +138,8 @@ final class MutableSpanTests: XCTestCase {
     var a = Array(0..<capacity)
     a.withUnsafeMutableBufferPointer {
       let view = MutableSpan(_unsafeElements: $0)
-      XCTAssertEqual(view.count, view._indices.count)
-      let equal = view._indices.elementsEqual(0..<view.count)
+      XCTAssertEqual(view.count, view.indices.count)
+      let equal = view.indices.elementsEqual(0..<view.count)
       XCTAssert(equal)
     }
   }
@@ -233,11 +233,10 @@ final class MutableSpanTests: XCTestCase {
     var a = Array(0..<capacity)
     a.withUnsafeMutableBufferPointer {
       let view = MutableSpan(_unsafeElements: $0)
-#warning("solve escape analysis issue")
-//      view.withUnsafeBufferPointer { b in
-//        let i = Int(capacity/2)
-//        XCTAssertEqual(b[i], b[i])
-//      }
+      view.withUnsafeBufferPointer { b in
+        let i = Int(capacity/2)
+        XCTAssertEqual(b[i], b[i])
+      }
     }
   }
 
@@ -247,10 +246,9 @@ final class MutableSpanTests: XCTestCase {
     let i = Int.random(in: a.indices)
     a.withUnsafeMutableBufferPointer {
       let view = MutableSpan(_unsafeElements: $0)
-#warning("solve escape analysis issue")
-//      view.withUnsafeBytes {
-//        XCTAssertEqual($0.load(fromByteOffset: i, as: UInt8.self), $0[i])
-//      }
+      view.withUnsafeBytes {
+        XCTAssertEqual($0.load(fromByteOffset: i, as: UInt8.self), $0[i])
+      }
     }
   }
 
@@ -260,19 +258,16 @@ final class MutableSpanTests: XCTestCase {
     let i = Int.random(in: a.indices)
     a.withUnsafeMutableBufferPointer {
       var view = MutableSpan(_unsafeElements: $0)
-#warning("solve escape analysis issue")
-//      view.withUnsafeMutableBufferPointer {
-//        $0[i] += 1
-//        // $0 = .allocate(capacity: 64)
-//      }
+      view.withUnsafeMutableBufferPointer {
+        $0[i] += 1
+      }
 
       let empty0 = UnsafeMutableBufferPointer(start: $0.baseAddress, count: 0)
       var emptySpan = MutableSpan(_unsafeElements: empty0)
-#warning("solve escape analysis issue")
-//      emptySpan.withUnsafeMutableBufferPointer {
-//        XCTAssertEqual($0.count, 0)
-//        XCTAssertNil($0.baseAddress)
-//      }
+      emptySpan.withUnsafeMutableBufferPointer {
+        XCTAssertEqual($0.count, 0)
+        XCTAssertNil($0.baseAddress)
+      }
     }
     XCTAssertEqual(Int(a[i]), i+1)
   }
@@ -283,18 +278,16 @@ final class MutableSpanTests: XCTestCase {
     let i = Int.random(in: a.indices)
     a.withUnsafeMutableBufferPointer {
       var view = MutableSpan(_unsafeElements: $0)
-#warning("solve escape analysis issue")
-//      view.withUnsafeMutableBytes {
-//        $0.storeBytes(of: UInt8(i+1), toByteOffset: i, as: UInt8.self)
-//      }
+      view.withUnsafeMutableBytes {
+        $0.storeBytes(of: UInt8(i+1), toByteOffset: i, as: UInt8.self)
+      }
 
       let empty0 = UnsafeMutableBufferPointer(start: $0.baseAddress, count: 0)
       var emptySpan = MutableSpan(_unsafeElements: empty0)
-#warning("solve escape analysis issue")
-//      emptySpan.withUnsafeMutableBytes {
-//        XCTAssertEqual($0.count, 0)
-//        XCTAssertNil($0.baseAddress)
-//      }
+      emptySpan.withUnsafeMutableBytes {
+        XCTAssertEqual($0.count, 0)
+        XCTAssertNil($0.baseAddress)
+      }
     }
     XCTAssertEqual(Int(a[i]), i+1)
   }

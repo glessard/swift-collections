@@ -227,19 +227,19 @@ final class SpanTests: XCTestCase {
     }
   }
 
-  func testFirstAndLast() {
-    let r = Int.random(in: 0..<1000)
-    let a = [r]
-    a.withUnsafeBufferPointer {
-      let span = Span(_unsafeElements: $0)
-      XCTAssertEqual(span.first, r)
-      XCTAssertEqual(span.last, r)
-
-      let emptySpan = span._extracting(0..<0)
-      XCTAssertEqual(emptySpan.first, nil)
-      XCTAssertEqual(emptySpan.last, nil)
-    }
-  }
+//  func testFirstAndLast() {
+//    let r = Int.random(in: 0..<1000)
+//    let a = [r]
+//    a.withUnsafeBufferPointer {
+//      let span = Span(_unsafeElements: $0)
+//      XCTAssertEqual(span.first, r)
+//      XCTAssertEqual(span.last, r)
+//
+//      let emptySpan = span._extracting(0..<0)
+//      XCTAssertEqual(emptySpan.first, nil)
+//      XCTAssertEqual(emptySpan.last, nil)
+//    }
+//  }
 
   func testPrefix() {
     let capacity = 4
@@ -247,10 +247,10 @@ final class SpanTests: XCTestCase {
     a.withUnsafeBufferPointer {
       let span = Span(_unsafeElements: $0)
       XCTAssertEqual(span.count, capacity)
-      XCTAssertEqual(span._extracting(first: 1).last, 0)
-      XCTAssertEqual(span._extracting(first: capacity).last, capacity-1)
-      XCTAssertEqual(span._extracting(droppingLast: capacity).last, nil)
-      XCTAssertEqual(span._extracting(droppingLast: 1).last, capacity-2)
+      XCTAssertEqual(span._extracting(first: 1)[0], 0)
+      XCTAssertEqual(span._extracting(first: capacity)[capacity-1], capacity-1)
+      XCTAssertEqual(span._extracting(droppingLast: capacity).count, 0)
+      XCTAssertEqual(span._extracting(droppingLast: 1)[capacity-2], capacity-2)
     }
 
     do {
@@ -268,11 +268,11 @@ final class SpanTests: XCTestCase {
     a.withUnsafeBufferPointer {
       let span = Span<Int>(_unsafeElements: $0)
       XCTAssertEqual(span.count, capacity)
-      XCTAssertEqual(span._extracting(last: capacity).first, 0)
-      XCTAssertEqual(span._extracting(last: capacity-1).first, 1)
-      XCTAssertEqual(span._extracting(last: 1).first, capacity-1)
-      XCTAssertEqual(span._extracting(droppingFirst: capacity).first, nil)
-      XCTAssertEqual(span._extracting(droppingFirst: 1).first, 1)
+      XCTAssertEqual(span._extracting(last: capacity)[0], 0)
+      XCTAssertEqual(span._extracting(last: capacity-1)[0], 1)
+      XCTAssertEqual(span._extracting(last: 1)[0], capacity-1)
+      XCTAssertEqual(span._extracting(droppingFirst: capacity).count, 0)
+      XCTAssertEqual(span._extracting(droppingFirst: 1)[0], 1)
     }
 
     do {
@@ -404,27 +404,27 @@ final class SpanTests: XCTestCase {
     XCTAssertEqual(bounds, 0..<0)
   }
 
-  func testSpanIterator() {
-    class C {
-      let id: Int
-      init(id: Int) { self.id = id }
-    }
-
-    let b = UnsafeMutableBufferPointer<C>.allocate(capacity: 8)
-    _ = b.initialize(fromContentsOf: (0..<8).map(C.init(id:)))
-    defer {
-      b.deinitialize()
-      b.deallocate()
-    }
-
-    let span = Span(_unsafeElements: b)
-    var iterator = Span.Iterator(from: span)
-    var i = 0
-    while let c = iterator.next() {
-      XCTAssertEqual(i, c.id)
-      i += 1
-    }
-  }
+//  func testSpanIterator() {
+//    class C {
+//      let id: Int
+//      init(id: Int) { self.id = id }
+//    }
+//
+//    let b = UnsafeMutableBufferPointer<C>.allocate(capacity: 8)
+//    _ = b.initialize(fromContentsOf: (0..<8).map(C.init(id:)))
+//    defer {
+//      b.deinitialize()
+//      b.deallocate()
+//    }
+//
+//    let span = Span(_unsafeElements: b)
+//    var iterator = Span.Iterator(from: span)
+//    var i = 0
+//    while let c = iterator.next() {
+//      XCTAssertEqual(i, c.id)
+//      i += 1
+//    }
+//  }
 
   func testTypeErasedSpanOfBitwiseCopyable() {
     let b = UnsafeMutableRawBufferPointer.allocate(byteCount: 64, alignment: 8)

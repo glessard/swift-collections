@@ -20,7 +20,7 @@ final class StdlibOutputSpanExtensionTests: XCTestCase {
     var array: [UInt8]
     array = Array(capacity: 32, initializingWith: { output in
       for i in 0..<(output.capacity/2) {
-        output.appendElement(UInt8(clamping: i))
+        output.append(UInt8(clamping: i))
       }
     })
     XCTAssertEqual(array.count, 16)
@@ -32,7 +32,7 @@ final class StdlibOutputSpanExtensionTests: XCTestCase {
     var data: Data
     data = Data(capacity: 32, initializingWith: { output in
       for i in 0..<(output.capacity/2) {
-        output.appendElement(UInt8(clamping: i))
+        output.append(UInt8(clamping: i))
       }
     })
     XCTAssertEqual(data.count, 16)
@@ -44,7 +44,7 @@ final class StdlibOutputSpanExtensionTests: XCTestCase {
     let c = UInt8(ascii: "A")
     string = String(utf8Capacity: 32, initializingWith: { output in
       for i in 0..<(output.capacity/2) {
-        output.appendElement(c + UInt8(clamping: i))
+        output.append(c + UInt8(clamping: i))
       }
     })
     XCTAssertEqual(string.utf8.count, 16)
