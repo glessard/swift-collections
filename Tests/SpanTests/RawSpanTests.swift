@@ -104,7 +104,7 @@ final class RawSpanTests: XCTestCase {
     }
   }
 
-  func testSubscript() {
+  func testExtracting() {
     let capacity = 4
     let b = (0..<capacity).map(Int8.init)
     b.withUnsafeBytes {
@@ -125,19 +125,19 @@ final class RawSpanTests: XCTestCase {
     }
   }
 
-  func testUncheckedSubscript() {
+  func testExtractingUnchecked() {
     let capacity = 32
     let b = (0..<capacity).map(UInt8.init)
     b.withUnsafeBytes {
       let span = RawSpan(_unsafeBytes: $0)
       let prefix = span._extracting(0..<8)
-      let beyond = prefix._extracting(unchecked: 16..<24)
+      let beyond = prefix._extracting(unchecked: 16...23)
       XCTAssertEqual(beyond.byteCount, 8)
       XCTAssertEqual(beyond.unsafeLoad(as: UInt8.self), 16)
     }
   }
 
-  func testUnsafeBytes() {
+  func testWithUnsafeBytes() {
     let capacity = 4
     let array = Array(0..<capacity)
     array.withUnsafeBufferPointer {
@@ -148,30 +148,15 @@ final class RawSpanTests: XCTestCase {
           XCTAssertTrue(b1.elementsEqual(b2))
         }
       }
+
+      let emptyBuffer = UnsafeBufferPointer(rebasing: $0[0..<0])
+      XCTAssertEqual(emptyBuffer.baseAddress, $0.baseAddress)
+
+      let emptySpan = RawSpan(_unsafeElements: emptyBuffer)
+      emptySpan.withUnsafeBytes {
+        XCTAssertNil($0.baseAddress)
+      }
     }
-
-    // Should we be able to derive a non-escapable value from a Span via unsafe pointers?
-//    let copy: RawSpan = span.withUnsafeBytes { RawSpan(_unsafeBytes: $0) }
-//    _ = copy
-  }
-
-  func testStrangeBorrow() {
-    let array: [String] = ["0", "1", "2", "3"]
-    _ = array
-
-//    let rs = RawSpan(array.storage) // Initializer 'init(_:)' requires that 'String' conform to 'BitwiseCopyable'
-
-//    let rs1 = array.storage.withUnsafeBufferPointer {
-//      RawSpan(unsafeBytes: UnsafeRawBufferPointer($0))
-//    }                               // Lifetime-dependent value escapes its scope
-//    _ = rs1
-
-//    let rs2 = array.storage.withUnsafeBufferPointer {
-//      UnsafeRawBufferPointer($0).withMemoryRebound(to: UInt8.self) { // requires that `Span` conform to `Escapable`
-//        return Span(unsafeBufferPointer: $0)
-//      }
-//    }
-//    _ = rs2
   }
 
   func testPrefix() {
